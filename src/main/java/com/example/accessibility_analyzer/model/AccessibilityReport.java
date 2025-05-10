@@ -14,8 +14,8 @@ import java.sql.Timestamp;
 public class AccessibilityReport {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-    @OneToOne
+    private Integer id;
+    @OneToOne(fetch=FetchType.LAZY)
     @JoinColumn(name="uploaded_file_id")
     private UploadedFile uploadedFile;
     private String issues;

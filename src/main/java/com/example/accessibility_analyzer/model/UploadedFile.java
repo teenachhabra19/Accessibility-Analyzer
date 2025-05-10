@@ -14,12 +14,10 @@ import java.sql.Timestamp;
 public class UploadedFile {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Integer id;
     private String fileName;
     @Lob
     private byte[] fileContent;
     private Timestamp uploadedAt;
-    @OneToOne(mappedBy = "uploadedFile", cascade = CascadeType.ALL)
-    private AccessibilityReport report;
 
 }
