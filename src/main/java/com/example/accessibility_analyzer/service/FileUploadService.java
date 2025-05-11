@@ -1,5 +1,6 @@
 package com.example.accessibility_analyzer.service;
 
+import com.example.accessibility_analyzer.model.AccessibilityIssue;
 import com.example.accessibility_analyzer.model.AccessibilityReport;
 import com.example.accessibility_analyzer.model.UploadedFile;
 import com.example.accessibility_analyzer.repo.AccessibiltyReportRepo;
@@ -34,17 +35,17 @@ public class FileUploadService {
 
             String html=new String(file.getBytes(), StandardCharsets.UTF_8);
             Document document= Jsoup.parse(html);
-            List<String> issues=new ArrayList<>();
+            List<AccessibilityIssue> issues=new ArrayList<>();
             if(document.title()==null ||document.title().isEmpty()){
-                issues.add("Missing <title> tag");
+                issues.add(new AccessibilityIssue("Missing title","<title>","Missing <title> tag"));
             }
             Element htmlTag=document.selectFirst("html");
             if(htmlTag!=null &&!htmlTag.hasAttr("lang")){
-                issues.add("<html> tag is missing 'lang' attribute");
+                issues.add(new AccessibilityIssue("Missing lang","<html>","<html> tag is missing 'lang' attribute"));
             }
            for(Element img:document.select("img")){
                if(!img.hasAttr("alt") ||img.attr("alt").trim().isEmpty()){
-                   issues.add("Image missing alt attribute at:"+img.outerHtml());
+                   issues.add(new AccessibilityIssue("Missing Alt","img","Image missing alt attribute"));
                }
            }
             for (Element input : document.select("input")) {
@@ -55,7 +56,7 @@ public class FileUploadService {
                 }
 
                 if (id.isEmpty() || !hasLabel) {
-                    issues.add("Input field without associated label: " + input.outerHtml());
+                    issues.add(new AccessibilityIssue("Missing label","input","Input field without associated label"));
                 }
             }
             String reportMessage;
@@ -63,12 +64,12 @@ public class FileUploadService {
             if(passed){
                 reportMessage="No Accessibility issues found";
             }else{
-                reportMessage="Accessibility issues found:\n" +String.join("\n",issues);
+                reportMessage="Accessibility issues found:\n" ;
             }
             AccessibilityReport report=new AccessibilityReport();
             report.setUploadedFile(uploadedFile);
-            report.setIssues(reportMessage);
-            report.setPassed(passed);
+            report.setIssues(issues);
+            report.setPassed(issues.isEmpty());
             report.setGeneratedAt(new Timestamp(System.currentTimeMillis()));
             accessibiltyReportRepo.save(report);
             return reportMessage;

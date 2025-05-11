@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.sql.Timestamp;
+import java.util.List;
 
 @Entity
 @Data
@@ -18,7 +19,9 @@ public class AccessibilityReport {
     @OneToOne(fetch=FetchType.LAZY)
     @JoinColumn(name="uploaded_file_id")
     private UploadedFile uploadedFile;
-    private String issues;
+    @ElementCollection
+    @CollectionTable(name="accessibility_issue",joinColumns = @JoinColumn(name="report_id"))
+    private List<AccessibilityIssue> issues;
     private boolean passed;
     private Timestamp generatedAt;
 
