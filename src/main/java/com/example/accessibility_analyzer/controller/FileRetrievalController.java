@@ -21,19 +21,19 @@ public class FileRetrievalController {
     public ResponseEntity<List<UploadedFile>> getAllFiles(){
         return fileRetrievalService.getAllFiles();
     }
-    @GetMapping("files/{id}/report")
-    public ResponseEntity<String> getReportByFileId(@PathVariable Integer id) {
-        AccessibilityReport report = fileRetrievalService.getReportByFileId(id);
-
-        if (report == null) {
-            return ResponseEntity.notFound().build();
-        }
-
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"report_" + id + ".txt\"")
-                .contentType(MediaType.TEXT_PLAIN)
-                .body(report.getIssues());
-    }
+//    @GetMapping("files/{id}/report")
+//    public ResponseEntity<String> getReportByFileId(@PathVariable Integer id) {
+//        AccessibilityReport report = fileRetrievalService.getReportByFileId(id);
+//
+//        if (report == null) {
+//            return ResponseEntity.notFound().build();
+//        }
+//
+//        return ResponseEntity.ok()
+//                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"report_" + id + ".txt\"")
+//                .contentType(MediaType.TEXT_PLAIN)
+//                .body(report.getIssues());
+//    }
 
 
 }
