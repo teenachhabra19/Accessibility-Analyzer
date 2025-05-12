@@ -2,6 +2,7 @@ package com.example.accessibility_analyzer.service;
 
 import com.example.accessibility_analyzer.model.AccessibilityIssue;
 import com.example.accessibility_analyzer.model.AccessibilityReport;
+import com.example.accessibility_analyzer.model.AccessibilityResponse;
 import com.example.accessibility_analyzer.model.UploadedFile;
 import com.example.accessibility_analyzer.repo.AccessibiltyReportRepo;
 import com.example.accessibility_analyzer.repo.UploadedFileRepo;
@@ -25,8 +26,10 @@ public class FileUploadService {
     @Autowired
     private UploadedFileRepo uploadedFileRepo;
 
-    public String handleFileUplZoad(MultipartFile file) {
+    public AccessibilityResponse handleFileUplZoad(MultipartFile file) {
+        AccessibilityResponse response = new AccessibilityResponse();
         try{
+
             UploadedFile uploadedFile = new UploadedFile();
             uploadedFile.setFileName(file.getOriginalFilename());
             uploadedFile.setFileContent(file.getBytes());
@@ -59,23 +62,28 @@ public class FileUploadService {
                     issues.add(new AccessibilityIssue("Missing label","input","Input field without associated label"));
                 }
             }
-            String reportMessage;
+            int score=Math.max(0,100-(issues.size()*10));
             boolean passed=issues.isEmpty();
-            if(passed){
-                reportMessage="No Accessibility issues found";
-            }else{
-                reportMessage="Accessibility issues found:\n" ;
-            }
+            String message=passed?"No Accessibility Issues found":issues.size()+" "+"Accessibility issues found" ;
+
             AccessibilityReport report=new AccessibilityReport();
             report.setUploadedFile(uploadedFile);
             report.setIssues(issues);
             report.setPassed(issues.isEmpty());
             report.setGeneratedAt(new Timestamp(System.currentTimeMillis()));
             accessibiltyReportRepo.save(report);
-            return reportMessage;
+
+            response.setScore(score);
+            response.setPassed(passed);
+            response.setIssues(issues);
+            response.setMessage(message);
+            return response;
 
         } catch (IOException e) {
-            return "Failed to read the file: " + e.getMessage();
+            response.setScore(0);
+            response.setPassed(false);
+            response.setMessage("Failed to read the file: " + e.getMessage());
+            return response;
         }
     }
 }

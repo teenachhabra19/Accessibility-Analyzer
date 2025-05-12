@@ -1,5 +1,6 @@
 package com.example.accessibility_analyzer.controller;
 
+import com.example.accessibility_analyzer.model.AccessibilityResponse;
 import com.example.accessibility_analyzer.service.FileUploadService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -16,8 +17,13 @@ public class FileUploadController {
     @Autowired
     private FileUploadService fileUploadService;
     @PostMapping("/analyze-file")
-   public ResponseEntity<String> uploadHtmlFile(@RequestParam("file")MultipartFile file){
-       String message=fileUploadService.handleFileUplZoad(file);
-        return ResponseEntity.ok(message);
+   public ResponseEntity<AccessibilityResponse> uploadHtmlFile(@RequestParam("file")MultipartFile file){
+       AccessibilityResponse response=fileUploadService.handleFileUplZoad(file);
+       if(response!=null){
+           return new ResponseEntity<>(response,HttpStatus.CREATED);
+       }else{
+           return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+       }
+
    }
 }
