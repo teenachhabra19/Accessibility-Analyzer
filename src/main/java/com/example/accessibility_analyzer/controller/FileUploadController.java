@@ -18,7 +18,7 @@ public class FileUploadController {
     private FileUploadService fileUploadService;
     @PostMapping("/analyze-file")
    public ResponseEntity<AccessibilityResponse> uploadHtmlFile(@RequestParam("file")MultipartFile file){
-       AccessibilityResponse response=fileUploadService.handleFileUplZoad(file);
+       AccessibilityResponse response=fileUploadService.handleFileUpload(file);
        if(response!=null){
            return new ResponseEntity<>(response,HttpStatus.CREATED);
        }else{

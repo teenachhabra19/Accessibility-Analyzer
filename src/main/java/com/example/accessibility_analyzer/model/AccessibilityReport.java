@@ -23,6 +23,8 @@ public class AccessibilityReport {
     @CollectionTable(name="accessibility_issue",joinColumns = @JoinColumn(name="report_id"))
     private List<AccessibilityIssue> issues;
     private boolean passed;
+    private int score;
+    private String message;
     private Timestamp generatedAt;
 
 }
