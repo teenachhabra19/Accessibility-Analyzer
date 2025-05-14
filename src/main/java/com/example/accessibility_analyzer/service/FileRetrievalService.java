@@ -1,6 +1,7 @@
 package com.example.accessibility_analyzer.service;
 
 import com.example.accessibility_analyzer.model.AccessibilityReport;
+import com.example.accessibility_analyzer.model.AccessibilityResponse;
 import com.example.accessibility_analyzer.model.UploadedFile;
 import com.example.accessibility_analyzer.repo.AccessibiltyReportRepo;
 import com.example.accessibility_analyzer.repo.UploadedFileRepo;
@@ -23,9 +24,19 @@ public class FileRetrievalService {
         return new ResponseEntity<>(uploadedFileRepo.findAll(), HttpStatus.OK);
     }
 
-    public AccessibilityReport getReportByFileId(Integer id) {
+    public ResponseEntity<AccessibilityResponse> getReportByFileId(Integer id) {
         AccessibilityReport accessibilityReport=accessibiltyReportRepo.findByUploadedFileId(id);
-       return accessibilityReport;
+      AccessibilityResponse response= new AccessibilityResponse(
+               accessibilityReport.getScore(),
+              accessibilityReport.isPassed(),
+              accessibilityReport.getIssues(),
+              accessibilityReport.getMessage()
+       );
+      if(response !=null){
+          return new ResponseEntity<>(response,HttpStatus.OK);
+      }else{
+          return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+      }
 
     }
 }
