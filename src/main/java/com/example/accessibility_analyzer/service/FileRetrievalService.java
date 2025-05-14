@@ -26,17 +26,17 @@ public class FileRetrievalService {
 
     public ResponseEntity<AccessibilityResponse> getReportByFileId(Integer id) {
         AccessibilityReport accessibilityReport=accessibiltyReportRepo.findByUploadedFileId(id);
+        if (accessibilityReport == null) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
       AccessibilityResponse response= new AccessibilityResponse(
                accessibilityReport.getScore(),
               accessibilityReport.isPassed(),
               accessibilityReport.getIssues(),
               accessibilityReport.getMessage()
        );
-      if(response !=null){
+
           return new ResponseEntity<>(response,HttpStatus.OK);
-      }else{
-          return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-      }
 
     }
 }

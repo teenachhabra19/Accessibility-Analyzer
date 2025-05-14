@@ -18,11 +18,11 @@ import java.util.List;
 public class FileRetrievalController {
     @Autowired
     private FileRetrievalService fileRetrievalService;
-    @GetMapping("files")
+    @GetMapping("/files")
     public ResponseEntity<List<UploadedFile>> getAllFiles(){
         return fileRetrievalService.getAllFiles();
     }
-    @GetMapping("files/{id}/report")
+    @GetMapping("/files/{id}/report")
     public ResponseEntity<AccessibilityResponse> getReportByFileId(@PathVariable Integer id) {
      return fileRetrievalService.getReportByFileId(id);
     }
