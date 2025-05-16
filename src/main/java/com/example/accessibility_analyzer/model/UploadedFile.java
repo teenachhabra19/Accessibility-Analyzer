@@ -16,8 +16,10 @@ public class UploadedFile {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
     private String fileName;
+    private String url;
     @Lob
     private byte[] fileContent;
     private Timestamp uploadedAt;
+    private String sourceType;
 
 }

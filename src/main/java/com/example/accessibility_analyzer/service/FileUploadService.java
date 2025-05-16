@@ -37,31 +37,22 @@ public class FileUploadService {
             if (filename == null || !(filename.endsWith(".html") || filename.endsWith(".htm"))) {
                 return createFailureResponse("Only .html or .htm files are supported.");
             }
-
-            String html = new String(file.getBytes(), StandardCharsets.UTF_8);
-            AccessibilityResponse response = analyzeHtml(html);
-
-            if (response.isPassed() || !response.getIssues().isEmpty()) {
+            byte[] fileBytes=file.getBytes();
                 UploadedFile uploadedFile = new UploadedFile();
                 uploadedFile.setFileName(filename);
-                uploadedFile.setFileContent(file.getBytes());
+                uploadedFile.setUrl(null);
+                uploadedFile.setFileContent(fileBytes);
                 uploadedFile.setUploadedAt(new Timestamp(System.currentTimeMillis()));
+                uploadedFile.setSourceType("FILE");
                 uploadedFileRepo.save(uploadedFile);
 
-                AccessibilityReport report = new AccessibilityReport();
-                report.setUploadedFile(uploadedFile);
-                report.setIssues(response.getIssues());
-                report.setPassed(response.isPassed());
-                report.setScore(response.getScore());
-                report.setGeneratedAt(new Timestamp(System.currentTimeMillis()));
-                report.setMessage(response.getMessage());
-                accessibiltyReportRepo.save(report);
-            }
-
+                String html=new String(fileBytes,StandardCharsets.UTF_8);
+                AccessibilityResponse response=analyzeHtml(html);
+                saveReport(uploadedFile,response);
             return response;
 
         } catch (IOException e) {
-            logger.error("Failed to process uploaded file", e);
+            logger.error("File read error", e);
             return createFailureResponse("Failed to read the file: " + e.getMessage());
         }
     }
@@ -70,8 +61,18 @@ public class FileUploadService {
     public AccessibilityResponse analyzeFromUrl(String url) {
         try {
             Document document = Jsoup.connect(url).get();
+            UploadedFile uploadedFile=new UploadedFile();
+            uploadedFile.setFileName(null);
+            uploadedFile.setFileContent(null);
+            uploadedFile.setUrl(url);
+            uploadedFile.setUploadedAt(new Timestamp(System.currentTimeMillis()));
+            uploadedFile.setSourceType("URL");
+            uploadedFileRepo.save(uploadedFile);
+
             String html = document.html();
-            return analyzeHtml(html);
+            AccessibilityResponse response = analyzeHtml(document.html());
+            saveReport(uploadedFile, response);
+            return response;
         } catch (IOException e) {
             logger.error("Failed to fetch URL: " + url, e);
             return createFailureResponse("Failed to fetch the URL: " + e.getMessage());
@@ -133,4 +134,15 @@ public class FileUploadService {
         response.setMessage(message);
         return response;
     }
+    private void saveReport(UploadedFile file, AccessibilityResponse response) {
+        AccessibilityReport report = new AccessibilityReport();
+        report.setUploadedFile(file);
+        report.setIssues(response.getIssues());
+        report.setPassed(response.isPassed());
+        report.setScore(response.getScore());
+        report.setGeneratedAt(new Timestamp(System.currentTimeMillis()));
+        report.setMessage(response.getMessage());
+        accessibiltyReportRepo.save(report);
+    }
+
 }
