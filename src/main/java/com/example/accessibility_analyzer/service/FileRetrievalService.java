@@ -20,6 +20,7 @@ public class FileRetrievalService {
     private UploadedFileRepo uploadedFileRepo;
     @Autowired
     private AccessibiltyReportRepo accessibiltyReportRepo;
+
     public ResponseEntity<List<UploadedFile>> getAllFiles() {
         return new ResponseEntity<>(uploadedFileRepo.findAll(), HttpStatus.OK);
     }

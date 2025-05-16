@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -32,64 +33,74 @@ public class FileUploadService {
     @Autowired
     private UploadedFileRepo uploadedFileRepo;
 
-    public AccessibilityResponse handleFileUpload(MultipartFile file) {
-        AccessibilityResponse response = new AccessibilityResponse();
 
+    public AccessibilityResponse handleFileUpload(MultipartFile file) {
         try {
             String filename = file.getOriginalFilename();
             if (filename == null || !(filename.endsWith(".html") || filename.endsWith(".htm"))) {
-                response.setScore(0);
-                response.setPassed(false);
-                response.setMessage("Only .html or .htm files are supported.");
-                return response;
+                return createFailureResponse("Only .html or .htm files are supported.");
             }
 
             String html = new String(file.getBytes(), StandardCharsets.UTF_8);
-            Document document = Jsoup.parse(html);
+            AccessibilityResponse response = analyzeHtml(html);
 
-            if (document == null) {
-                response.setScore(0);
-                response.setPassed(false);
-                response.setMessage("Failed to parse HTML file.");
-                return response;
+            if (response.isPassed() || !response.getIssues().isEmpty()) {
+                UploadedFile uploadedFile = new UploadedFile();
+                uploadedFile.setFileName(filename);
+                uploadedFile.setFileContent(file.getBytes());
+                uploadedFile.setUploadedAt(new Timestamp(System.currentTimeMillis()));
+                uploadedFileRepo.save(uploadedFile);
+
+                AccessibilityReport report = new AccessibilityReport();
+                report.setUploadedFile(uploadedFile);
+                report.setIssues(response.getIssues());
+                report.setPassed(response.isPassed());
+                report.setScore(response.getScore());
+                report.setGeneratedAt(new Timestamp(System.currentTimeMillis()));
+                report.setMessage(response.getMessage());
+                accessibiltyReportRepo.save(report);
             }
 
-            List<AccessibilityIssue> issues = analyzeDocument(document);
-            int score = Math.max(0, 100 - (issues.size() * 10));
-            boolean passed = issues.isEmpty();
-            String message = passed ? "No Accessibility Issues found" : issues.size() + " Accessibility issues found";
-
-            UploadedFile uploadedFile = new UploadedFile();
-            uploadedFile.setFileName(filename);
-            uploadedFile.setFileContent(file.getBytes());
-            uploadedFile.setUploadedAt(new Timestamp(System.currentTimeMillis()));
-            uploadedFileRepo.save(uploadedFile);
-
-            AccessibilityReport report = new AccessibilityReport();
-            report.setUploadedFile(uploadedFile);
-            report.setIssues(issues);
-            report.setPassed(passed);
-            report.setGeneratedAt(new Timestamp(System.currentTimeMillis()));
-            report.setScore(score);
-            report.setMessage(message);
-            accessibiltyReportRepo.save(report);
-
-            // Build response
-            response.setScore(score);
-            response.setPassed(passed);
-            response.setIssues(issues);
-            response.setMessage(message);
+            return response;
 
         } catch (IOException e) {
             logger.error("Failed to process uploaded file", e);
-            response.setScore(0);
-            response.setPassed(false);
-            response.setMessage("Failed to read the file: " + e.getMessage());
+            return createFailureResponse("Failed to read the file: " + e.getMessage());
         }
+    }
+
+
+    public AccessibilityResponse analyzeFromUrl(String url) {
+        try {
+            Document document = Jsoup.connect(url).get();
+            String html = document.html();
+            return analyzeHtml(html);
+        } catch (IOException e) {
+            logger.error("Failed to fetch URL: " + url, e);
+            return createFailureResponse("Failed to fetch the URL: " + e.getMessage());
+        }
+    }
+
+    public AccessibilityResponse analyzeHtml(String html) {
+        AccessibilityResponse response = new AccessibilityResponse();
+        Document document = Jsoup.parse(html);
+
+        if (document == null) {
+            return createFailureResponse("Failed to parse HTML content.");
+        }
+
+        List<AccessibilityIssue> issues = analyzeDocument(document);
+        int score = Math.max(0, 100 - (issues.size() * 10));
+        boolean passed = issues.isEmpty();
+        String message = passed ? "No accessibility issues found." : issues.size() + " accessibility issues found.";
+
+        response.setScore(score);
+        response.setPassed(passed);
+        response.setIssues(issues);
+        response.setMessage(message);
 
         return response;
     }
-
     private List<AccessibilityIssue> analyzeDocument(Document document) {
         List<AccessibilityIssue> issues = new ArrayList<>();
 
@@ -104,21 +115,25 @@ public class FileUploadService {
 
         for (Element img : document.select("img")) {
             if (!img.hasAttr("alt") || img.attr("alt").trim().isEmpty()) {
-                issues.add(new AccessibilityIssue("Missing Alt", "img", "Image missing alt attribute"));
+                issues.add(new AccessibilityIssue("Missing alt", "<img>", "Image missing alt attribute"));
             }
         }
 
         for (Element input : document.select("input")) {
             String id = input.id();
-            boolean hasLabel = false;
-            if (!id.isEmpty()) {
-                hasLabel = !document.select("label[for=" + id + "]").isEmpty();
-            }
+            boolean hasLabel = !id.isEmpty() && !document.select("label[for=" + id + "]").isEmpty();
             if (id.isEmpty() || !hasLabel) {
-                issues.add(new AccessibilityIssue("Missing label", "input", "Input field without associated label"));
+                issues.add(new AccessibilityIssue("Missing label", "<input>", "Input field without associated label"));
             }
         }
 
         return issues;
+    }
+    private AccessibilityResponse createFailureResponse(String message) {
+        AccessibilityResponse response = new AccessibilityResponse();
+        response.setScore(0);
+        response.setPassed(false);
+        response.setMessage(message);
+        return response;
     }
 }

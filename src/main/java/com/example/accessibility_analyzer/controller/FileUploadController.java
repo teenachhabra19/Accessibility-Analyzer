@@ -26,4 +26,13 @@ public class FileUploadController {
        }
 
    }
+   @PostMapping("/analyze-url")
+    public ResponseEntity<AccessibilityResponse> analyzeUrl(@RequestParam String url){
+        AccessibilityResponse response=fileUploadService.analyzeFromUrl(url);
+       if(response!=null){
+           return new ResponseEntity<>(response,HttpStatus.CREATED);
+       }else{
+           return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+       }
+   }
 }
