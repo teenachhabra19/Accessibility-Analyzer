@@ -1,9 +1,6 @@
 package com.example.accessibility_analyzer.service;
 
-import com.example.accessibility_analyzer.model.AccessibilityIssue;
-import com.example.accessibility_analyzer.model.AccessibilityReport;
-import com.example.accessibility_analyzer.model.AccessibilityResponse;
-import com.example.accessibility_analyzer.model.UploadedFile;
+import com.example.accessibility_analyzer.model.*;
 import com.example.accessibility_analyzer.repo.AccessibiltyReportRepo;
 import com.example.accessibility_analyzer.repo.UploadedFileRepo;
 import org.jsoup.Jsoup;
@@ -90,7 +87,7 @@ public class FileUploadService {
         }
 
         List<AccessibilityIssue> issues = analyzeDocument(document);
-        int score = Math.max(0, 100 - (issues.size() * 10));
+        int score = AccessibilityScorer.calculateScore(issues);
         boolean passed = issues.isEmpty();
         String message = passed ? "No accessibility issues found." : issues.size() + " accessibility issues found.";
 
@@ -105,17 +102,17 @@ public class FileUploadService {
         List<AccessibilityIssue> issues = new ArrayList<>();
 
         if (document.title() == null || document.title().isEmpty()) {
-            issues.add(new AccessibilityIssue("Missing title", "<title>", "Missing <title> tag"));
+            issues.add(new AccessibilityIssue("MISSING_TITLE", "<title>", "Missing <title> tag"));
         }
 
         Element htmlTag = document.selectFirst("html");
         if (htmlTag != null && !htmlTag.hasAttr("lang")) {
-            issues.add(new AccessibilityIssue("Missing lang", "<html>", "<html> tag is missing 'lang' attribute"));
+            issues.add(new AccessibilityIssue("MISSING_LANG", "<html>", "<html> tag is missing 'lang' attribute"));
         }
 
         for (Element img : document.select("img")) {
             if (!img.hasAttr("alt") || img.attr("alt").trim().isEmpty()) {
-                issues.add(new AccessibilityIssue("Missing alt", "<img>", "Image missing alt attribute"));
+                issues.add(new AccessibilityIssue("IMAGE_MISSING_ALT", "<img>", "Image missing alt attribute"));
             }
         }
 
@@ -123,7 +120,7 @@ public class FileUploadService {
             String id = input.id();
             boolean hasLabel = !id.isEmpty() && !document.select("label[for=" + id + "]").isEmpty();
             if (id.isEmpty() || !hasLabel) {
-                issues.add(new AccessibilityIssue("Missing label", "<input>", "Input field without associated label"));
+                issues.add(new AccessibilityIssue("INPUT_MISSING_LABEL", "<input>", "Input field without associated label"));
             }
         }
 
