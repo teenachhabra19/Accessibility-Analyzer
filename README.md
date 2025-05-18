@@ -15,7 +15,7 @@ Assigns scores based on issue category weight instead of flat deductions.
 
 📄 Stores uploaded files and their corresponding reports in a database.
 
-🧠 Built-in integration with Spring AI to allow AI-powered suggestions for improving accessibility (WIP).(Working on this)
+
 
 
 🔧 Tech Stack
