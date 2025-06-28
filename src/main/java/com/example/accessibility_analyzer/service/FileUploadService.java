@@ -57,7 +57,6 @@ public class FileUploadService {
         }
     }
 
-
     public AccessibilityResponse analyzeFromUrl(String url) {
         try {
             Document document = Jsoup.connect(url).get();
@@ -144,5 +143,4 @@ public class FileUploadService {
         report.setMessage(response.getMessage());
         accessibiltyReportRepo.save(report);
     }
-
 }
