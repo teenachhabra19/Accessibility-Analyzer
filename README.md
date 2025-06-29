@@ -15,6 +15,8 @@ Assigns scores based on issue category weight instead of flat deductions.
 
 📄 Stores uploaded files and their corresponding reports in a database.
 
+Project Live Link: https://accessibility-pro-delta.vercel.app/
+
 
 
 
