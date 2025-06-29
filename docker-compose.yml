@@ -1,0 +1,36 @@
+#version: '3.8'
+#
+#services:
+#  postgres:
+#    image: postgres:15
+#    container_name: pg-db
+#    ports:
+#      - "5433:5432"
+#    networks:
+#      - s-network
+#    environment:
+#      POSTGRES_DB: accessibility_db
+#      POSTGRES_USER: postgres
+#      POSTGRES_PASSWORD: postgres
+#    volumes:
+#      - pgdata:/var/lib/postgresql/data
+#
+#  springboot-app:
+#    build: .
+#    container_name: accessibility-app
+#    ports:
+#      - "8080:8080"
+#    networks:
+#      - s-network
+#    depends_on:
+#      - postgres
+#    environment:
+#      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/accessibility_db
+#      SPRING_DATASOURCE_USERNAME: postgres
+#      SPRING_DATASOURCE_PASSWORD: postgres
+#    restart: on-failure
+#networks:                   # Moved networks to the correct level
+#  s-network:
+#    driver: bridge
+#volumes:
+#  pgdata:
